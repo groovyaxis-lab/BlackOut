@@ -1,5 +1,5 @@
 plugins {
-    id("fabric-loom") version "1.12.7"
+    id("fabric-loom") version "1.14-SNAPSHOT"
 }
 
 base {
@@ -17,6 +17,9 @@ repositories {
         name = "meteor-maven-snapshots"
         url = uri("https://maven.meteordev.org/snapshots")
     }
+    flatDir {
+        dirs("libs")
+    }
 }
 
 dependencies {
@@ -27,11 +30,20 @@ dependencies {
 
     // Meteor
     modImplementation("meteordevelopment:meteor-client:${properties["meteor_version"] as String}-SNAPSHOT")
-    modCompileOnly("meteordevelopment:baritone:${properties["minecraft_version"] as String}-SNAPSHOT")
+
+    // Baritone (local nightly build for 1.21.11)
+    modCompileOnly(files("libs/baritone-api-fabric-1.15.0-2-gf7a53504.jar"))
 }
 
 loom {
     accessWidenerPath = file("src/main/resources/blackout.accesswidener")
+
+    runConfigs.all {
+        ideConfigGenerated(true)
+        vmArgs("-Xmx2G", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC")
+        // Fix for AMD GPUs and render system initialization issues
+        vmArgs("-Dloader.gameJarPath.inject=true")
+    }
 }
 
 tasks {
